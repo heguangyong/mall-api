@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<artifactId>crmeb</artifactId>
+		<groupId>com.zbkj</groupId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	<groupId>com.laios</groupId>
+	<artifactId>crmeb-catering</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>crmeb-catering</name>
+	<description>crmeb-catering</description>
+
+	<properties>
+		<java.version>1.8</java.version>
+		<crmeb-service>0.0.1-SNAPSHOT</crmeb-service>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.zbkj</groupId>
+			<artifactId>crmeb-service</artifactId>
+			<version>${crmeb-service}</version>
+		</dependency>
+	</dependencies>
+
+
+
+
+</project>

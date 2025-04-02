@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.PaidMemberOrderDao">
+
+    <select id="findPlatformPage" resultType="com.zbkj.common.response.PaidMemberOrderResponse" parameterType="Map">
+        SELECT o.id,o.uid,o.order_no as orderNo,o.card_name as cardName,o.price,o.pay_type as payType,o.paid,
+               o.pay_time as payTime,o.card_expiration_time as cardExpirationTime,o.type,o.create_time as createTime
+               ,u.nickname as userNickname,u.phone as userPhone
+        from eb_paid_member_order as o
+        left join eb_user as u on o.uid = u.id
+        <where>
+        <if test="orderNo != '' and orderNo != null ">
+            and o.`order_no` = #{orderNo}
+        </if>
+        <if test="cardName != '' and cardName != null ">
+            and o.card_name like CONCAT('%',#{cardName},'%')
+        </if>
+        <if test="payType != '' and payType != null ">
+            and o.`pay_type` = #{payType}
+        </if>
+        <if test="payStatus != null ">
+            and o.`paid` = #{payStatus}
+        </if>
+        <if test="startTime != null and startTime !='' ">
+            and o.pay_time between #{startTime} and #{endTime}
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            o.uid like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and o.uid = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
+        </if>
+        </where>
+        order by o.pay_time desc, o.id desc
+    </select>
+
+</mapper>

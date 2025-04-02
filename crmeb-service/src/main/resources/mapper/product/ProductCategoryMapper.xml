@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.ProductCategoryDao">
+
+    <select id="getThirdCategoryByFirstId" resultType="com.zbkj.common.model.product.ProductCategory" parameterType="Map">
+        SELECT * FROM eb_product_category
+        where `level` = 3 and is_del = 0 and is_show = 1
+        and pid in (select id from eb_product_category where pid = #{firstId} and is_del = 0)
+        ORDER BY sort desc
+        <if test="limit != null and limit gt 0">
+            limit #{limit}
+        </if>
+    </select>
+
+</mapper>

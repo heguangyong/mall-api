@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.ProductTagDao">
+    <select id="calcProductTagForLastThirtyDaysSalesByOptionUnit" resultType="com.zbkj.common.response.ProductTagTaskItem" parameterType="Map">
+        SELECT
+            p.id,
+            p.name,
+            SUM(o.pay_num) AS flag
+        FROM
+            eb_order_detail o
+                JOIN
+            eb_product p ON o.product_id = p.id
+                JOIN
+            eb_order er ON o.order_no = er.order_no
+        WHERE
+            er.paid = 1 AND er.mer_id > 0 AND o.create_time >= CURDATE() - INTERVAL 30 DAY
+        GROUP BY
+            p.id, p.name
+        HAVING
+            flag > #{unit};
+    </select>
+
+    <select id="calcProductTagForNewGoods" resultType="com.zbkj.common.response.ProductTagTaskItem" parameterType="Map">
+        SELECT id, name,
+            CASE
+                WHEN create_time IS NOT NULL THEN 1
+                ELSE 0
+            END AS flag
+        FROM eb_product
+        WHERE create_time
+            BETWEEN DATE_SUB(NOW(), INTERVAL #{unit} DAY) AND NOW()
+            AND (audit_status = 2 OR audit_status = 0);
+    </select>
+
+
+    <select id="calcProductTagForIsSelf" resultType="com.zbkj.common.response.ProductTagTaskItem">
+        SELECT
+            p.id,
+            p.name,
+            CASE
+                WHEN m.is_self = 1 THEN 1
+                ELSE 0
+            END AS flag
+        FROM
+            eb_product p
+                JOIN
+            eb_merchant m ON p.mer_id = m.id
+        WHERE
+            m.is_self = 1;
+    </select>
+
+    <select id="calcProductTagForReplayCount" resultType="com.zbkj.common.response.ProductTagTaskItem" parameterType="Map">
+        SELECT product_id AS id,
+               COUNT(*) AS flag
+        FROM eb_product_reply
+        WHERE create_time
+            BETWEEN DATE_SUB(NOW(), INTERVAL 30 DAY) AND NOW() AND is_del = 0
+        GROUP BY product_id
+        HAVING flag > #{unit};
+    </select>
+
+    <select id="calcProductTagForFiveStart" resultType="com.zbkj.common.response.ProductTagTaskItem" parameterType="Map">
+        SELECT
+            product_id AS id,
+            COUNT(*) AS flag
+        FROM
+            eb_product_reply
+        WHERE create_time
+            BETWEEN DATE_SUB(NOW(), INTERVAL 30 DAY) AND NOW() AND is_del = 0
+            AND star > 4
+        GROUP BY product_id
+        HAVING
+            flag > #{unit};
+    </select>
+
+    <select id="calcProductTagForFreeDelivery" resultType="com.zbkj.common.response.ProductTagTaskItem">
+        SELECT
+            p.id,
+            p.name,
+            CASE
+                WHEN t.appoint = 0 THEN 1
+                ELSE 0
+                END AS flag
+        FROM
+            eb_product p
+                JOIN
+            eb_shipping_templates t ON p.temp_id = t.id
+        WHERE
+            t.appoint = 0;
+    </select>
+
+</mapper>

@@ -1,0 +1,78 @@
+version: "3.8"
+
+name: cemeb-system
+
+services:
+  mysql:
+    container_name: crmeb-mysql
+    image: mysql:5.7
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-java_mer_demo}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
+    volumes:
+#      - mysql:/var/lib/mysql/
+      - ./docker/mysql/data:/var/lib/mysql
+      - ./docker/mysql/logs:/var/log/mysql
+      - ./docker/mysql/etc/mysql.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf
+      - ./docker/mysql/etc/mysql.cnf:/etc/my.conf
+      - ./docker/sql/mysql/data.sql:/docker-entrypoint-initdb.d/data.sql:ro
+    command:
+      - --lower_case_table_names=1
+
+  redis:
+    container_name: crmeb-redis
+    image: redis:6-alpine
+    restart: unless-stopped
+    ports:
+      - "16379:6379"
+#    volumes:
+    volumes:
+      - ./docker/redis/etc/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./docker/redis/data:/data
+      - ./docker/redis/logs:/var/log/redis
+
+  server:
+    container_name: crmeb-api
+#    build:
+#      context: ./yudao-server/
+    image: cemeb-api:v1
+    restart: unless-stopped
+    ports:
+      - "20700:20700"
+    volumes:
+      - ./docker/app/conf/application-prod.yml:/app/application-prod.yml:ro
+      - ./docker/app/conf/application.yml:/app/application.yml:ro
+      - ./docker/app/logs:/app/logs
+
+    environment:
+      # https://github.com/polovyivan/docker-pass-configs-to-container
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_OPTS:
+        ${JAVA_OPTS:-
+          -Xms512m
+          -Xmx512m
+          -Djava.security.egd=file:/dev/./urandom
+        }
+      ARGS:
+        --spring.datasource.dynamic.datasource.master.url=${MASTER_DATASOURCE_URL:-jdbc:mysql://crmeb-mysql:3306/java_mer_demo?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true}
+        --spring.datasource.dynamic.datasource.master.username=${MASTER_DATASOURCE_USERNAME:-root}
+        --spring.datasource.dynamic.datasource.master.password=${MASTER_DATASOURCE_PASSWORD:-123456}
+        --spring.datasource.dynamic.datasource.slave.url=${SLAVE_DATASOURCE_URL:-jdbc:mysql://crmeb-mysql:3306/java_mer_demo?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true}
+        --spring.datasource.dynamic.datasource.slave.username=${SLAVE_DATASOURCE_USERNAME:-root}
+        --spring.datasource.dynamic.datasource.slave.password=${SLAVE_DATASOURCE_PASSWORD:-123456}
+        --spring.redis.host=${REDIS_HOST:-yudao-redis}
+        --spring.redis.password=${REDIS_PASSWORD:-111111}
+    depends_on:
+      - mysql
+      - redis
+
+
+volumes:
+  mysql:
+    driver: local
+  redis:
+    driver: local

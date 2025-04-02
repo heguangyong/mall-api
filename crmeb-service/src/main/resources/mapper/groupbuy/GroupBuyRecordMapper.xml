@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.groupby.GroupBuyRecordDao">
+
+    <select id="findAdminList" resultType="com.zbkj.common.response.groupbuy.GroupBuyActivityRecordAdminListResponse" parameterType="Map">
+        SELECT gbr.group_buying_id as groupBuyingId,gbr.group_leader_uid as groupLeaderUid,gbr.buying_count_num as buyingCountNum,
+               gbr.create_time as createTime,gbr.end_time as endTime,gbr.yet_buying_num as yetBuyingNum,
+               u.nickname as groupLeaderNickname,
+               p.image as productImage,p.name as productName,
+               gba.group_name as groupName,
+               m.name as merName
+        FROM eb_group_buy_record AS gbr
+        left join eb_group_buy_activity gba on gba.id = gbr.group_activity_id
+        left join eb_product p on p.id = gbr.product_group_id
+        left join eb_merchant m on m.id = gbr.mer_id
+        left join eb_user u on u.id = gbr.group_leader_uid
+        where gbr.is_del = 0 and gbr.record_status = #{recordStatus}
+        <if test="groupActivityName != null and groupActivityName !='' ">
+            and gba.group_name like CONCAT('%',#{groupActivityName},'%')
+        </if>
+        <if test="productName != null and productName !='' ">
+            and p.name like CONCAT('%',#{productName},'%')
+        </if>
+        <if test="merName != null and merName !='' ">
+            and m.name like CONCAT('%',#{merName},'%')
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and gbr.create_time between #{startTime} and #{endTime}
+        </if>
+        <if test="merId != null">
+            and gbr.mer_id = #{merId}
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            u.id like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and u.id = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
+        </if>
+        ORDER BY gbr.group_buying_id desc
+    </select>
+
+    <select id="getAdminListHeaderCount" resultType="java.lang.Integer" parameterType="Map">
+        SELECT count(*)
+        FROM eb_group_buy_record AS gbr
+        left join eb_group_buy_activity gba on gba.id = gbr.group_activity_id
+        left join eb_product p on p.id = gbr.product_group_id
+        left join eb_merchant m on m.id = gbr.mer_id
+        left join eb_user u on u.id = gbr.group_leader_uid
+        where gbr.is_del = 0 and gbr.record_status = #{recordStatus}
+        <if test="groupActivityName != null and groupActivityName !='' ">
+            and gba.group_name like CONCAT('%',#{groupActivityName},'%')
+        </if>
+        <if test="productName != null and productName !='' ">
+            and p.name like CONCAT('%',#{productName},'%')
+        </if>
+        <if test="merName != null and merName !='' ">
+            and m.name like CONCAT('%',#{merName},'%')
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and gbr.create_time between #{startTime} and #{endTime}
+        </if>
+        <if test="merId != null">
+            and gbr.mer_id = #{merId}
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            u.id like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and u.id = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
+        </if>
+        ORDER BY gbr.group_buying_id desc
+    </select>
+
+
+    <select id="getGroupRecordListForNotExist" resultType="com.zbkj.common.model.groupbuy.GroupBuyRecord" parameterType="Map">
+        SELECT r.*
+        FROM eb_group_buy_record r
+                 LEFT JOIN eb_group_buy_user u ON r.group_buying_id = u.group_record_id AND u.group_uid = #{ userId }
+        WHERE r.group_leader_uid != #{ userId }  -- 排除团长为当前用户的记录
+          AND (u.group_uid IS NULL OR u.group_uid != #{ userId })  -- 排除当前用户已参与的拼团记录
+          AND r.is_del = 0  -- 可选：排除已删除的记录
+          AND r.record_status = 0 -- 拼团中的
+          AND r.group_activity_id = #{ groupActivityId }
+          AND r.product_group_id = #{ productId }
+                ORDER BY r.create_time DESC
+            LIMIT #{ limit };-- 可选：按创建时间排序
+    </select>
+</mapper>

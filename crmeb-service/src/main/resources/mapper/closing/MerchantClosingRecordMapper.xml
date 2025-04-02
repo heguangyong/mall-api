@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.MerchantClosingRecordDao">
+
+    <select id="getMerchantClosingPageListByPlatform" parameterType="java.util.Map" resultType="com.zbkj.common.response.MerchantClosingPlatformPageResponse">
+        select mc.id,mc.closing_no as closingNo,mc.amount,mc.closing_type as closingType,mc.account_status as accountStatus,mc.audit_status as auditStatus,mc.create_time as createTime,mc.platform_mark as platformMark,
+        m.name as merName,sa.real_name as auditName
+        from eb_merchant_closing_record mc
+        left join eb_merchant m on mc.mer_id = m.id
+        left join eb_system_admin sa on mc.audit_id = sa.id
+        <where>
+            <if test="merId != null">
+                and mc.mer_id = #{merId}
+            </if>
+            <if test="closingNo != null and closingNo != ''">
+                and mc.closing_no = #{closingNo}
+            </if>
+            <if test="closingType != null and closingType != ''">
+                and mc.closing_type = #{closingType}
+            </if>
+            <if test="auditStatus != null">
+                and mc.audit_status = #{auditStatus}
+            </if>
+            <if test="accountStatus != null">
+                and mc.account_status = #{accountStatus}
+            </if>
+            <if test="startTime != null and startTime != ''">
+                and (mc.create_time between #{startTime} and #{endTime})
+            </if>
+        </where>
+        order by mc.id desc
+    </select>
+
+</mapper>

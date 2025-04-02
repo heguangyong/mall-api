@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.UserDao">
+
+    <select id="findAdminList" resultType="com.zbkj.common.model.user.User" parameterType="Map">
+        SELECT u.* FROM eb_user AS u
+        <where>
+            <if test="sex != null">
+                and u.sex = #{sex}
+            </if>
+            <if test="tagIdSql != null and tagIdSql !='' ">
+                and ${tagIdSql}
+            </if>
+            <if test="registerType != null and registerType !='' ">
+                and u.register_type = #{registerType, jdbcType=VARCHAR}
+            </if>
+            <if test="payCount != null">
+                <if test="payCount &lt;= 0">
+                    and u.pay_count = 0
+                </if>
+                <if test="payCount > 0">
+                    and u.pay_count >= #{payCount}
+                </if>
+            </if>
+            <if test="isPromoter != null">
+                and u.`is_promoter` = #{isPromoter}
+            </if>
+            <if test="isPaidMember != null">
+                and u.`is_paid_member` = #{isPaidMember}
+            </if>
+            <if test="isLogoff != null">
+                and u.`is_logoff` = #{isLogoff}
+            </if>
+            <if test="startTime != null and startTime != ''">
+                <choose>
+                    <when test="accessType == 1">
+                        and u.create_time between #{startTime} and #{endTime}
+                        and u.create_time = u.last_login_time
+                    </when>
+                    <when test="accessType == 2">
+                        and u.last_login_time between #{startTime} and #{endTime}
+                    </when>
+                    <when test="accessType == 3">
+                        and u.last_login_time not between #{startTime} and #{endTime}
+                    </when>
+                    <otherwise>
+                        and u.last_login_time between #{startTime} and #{endTime}
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="keywords != '' and keywords != null ">
+                and (
+                u.id like CONCAT('%',#{keywords},'%') or
+                u.nickname like CONCAT('%',#{keywords},'%') or
+                u.phone like CONCAT('%',#{keywords},'%')
+                )
+            </if>
+            <if test="uid != null ">
+                and u.id = #{uid}
+            </if>
+            <if test="nickname != '' and nickname != null ">
+                and u.nickname like CONCAT('%',#{nickname},'%')
+            </if>
+            <if test="phone != '' and phone != null ">
+                and u.phone like CONCAT('%',#{phone},'%')
+            </if>
+        </where>
+        ORDER BY u.id desc
+    </select>
+
+    <select id="findMerchantList" resultType="com.zbkj.common.model.user.User" parameterType="Map">
+        SELECT u.* FROM eb_user AS u
+        RIGHT JOIN eb_user_merchant_collect um on u.id = um.uid
+        where
+        um.mer_id = #{merId}
+        <if test="sex != null">
+            and u.sex = #{sex}
+        </if>
+        <if test="registerType != null and registerType !='' ">
+            and u.register_type = #{registerType, jdbcType=VARCHAR}
+        </if>
+        <if test="startTime != null and startTime != '' ">
+            and um.create_time between #{startTime} and #{endTime}
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            u.id like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and u.id = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
+        </if>
+        ORDER BY u.id desc
+    </select>
+
+    <select id="getSpreadPeopleList" resultType="com.zbkj.common.response.UserSpreadPeopleItemResponse" parameterType="map">
+        SELECT u.id,u.nickname, u.avatar, DATE_FORMAT(u.spread_time, '%Y-%m-%d %H:%i:%s') AS `time`, u.spread_count AS childCount,
+        (SELECT count( * ) AS num FROM eb_user_brokerage_record AS br WHERE br.uid = #{uid} AND br.sub_uid = u.id AND br.STATUS = 3) AS orderCount,
+        (SELECT IFNULL( sum( o.pay_price ), 0 ) AS price FROM eb_order AS o RIGHT JOIN eb_user_brokerage_record AS br ON br.link_no = o.order_no
+        WHERE o.uid = u.id AND br.uid = #{uid} AND br.sub_uid = u.id AND o.STATUS > 1 AND br.STATUS = 3) AS amountCount
+        FROM eb_user AS u
+        where
+        u.id in
+        <foreach item="userIdList" collection="userIdList.split(',')" open="(" separator="," close=")">
+            #{userIdList}
+        </foreach>
+        <if test="keywords != '' and keywords != null ">
+            and ( u.real_name like CONCAT('%',#{keywords},'%') or u.nickname like CONCAT('%',#{keywords},'%')
+        </if>
+        ORDER BY #{sortKey} ${sortValue}
+    </select>
+
+    <select id="findRetailStorePeopleList" resultType="com.zbkj.common.model.user.User" parameterType="Map">
+        SELECT id,nickname,real_name,phone,avatar,spread_count,brokerage_price,spread_uid,promoter_time
+        FROM eb_user
+        where is_logoff = 0 and is_promoter = 1
+        <if test="startTime != null and startTime != ''">
+            and create_time between #{startTime} and #{endTime}
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            id like CONCAT('%',#{keywords},'%') or
+            nickname like CONCAT('%',#{keywords},'%') or
+            phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and id = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and phone like CONCAT('%',#{phone},'%')
+        </if>
+        ORDER BY id desc
+    </select>
+</mapper>

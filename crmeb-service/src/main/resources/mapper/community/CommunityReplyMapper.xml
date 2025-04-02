@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.community.CommunityReplyDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zbkj.common.model.community.CommunityReply">
+        <id column="id" property="id" />
+        <result column="type" property="type" />
+        <result column="uid" property="uid" />
+        <result column="content" property="content" />
+        <result column="parent_id" property="parentId" />
+        <result column="parent_uid" property="parentUid" />
+        <result column="review_id" property="reviewId" />
+        <result column="review_uid" property="reviewUid" />
+        <result column="count_start" property="countStart" />
+        <result column="count_reply" property="countReply" />
+        <result column="audit_status" property="auditStatus" />
+        <result column="refusal" property="refusal" />
+        <result column="note_id" property="noteId" />
+        <result column="is_del" property="isDel" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, `type`, uid, content, parent_id, parent_uid, review_id, review_uid, count_start, count_reply, audit_status, refusal, note_id, is_del, create_time, update_time
+    </sql>
+
+    <select id="findPageList" resultType="com.zbkj.common.response.CommunityReplyPageDateResponse" parameterType="Map">
+        SELECT r.id,r.`type`,r.uid,r.content,r.count_start as countStart,r.count_reply as countReply,
+        r.audit_status as auditStatus,r.refusal,r.create_time as createTime,
+        n.title as noteTitle,u.nickname as userNickname
+        from eb_community_reply as r
+        left join eb_user as u on r.uid = u.id
+        left join eb_community_notes as n on r.note_id = n.id
+        where r.is_del = 0
+        <if test="keywordsContent != null and keywordsContent !='' ">
+            and r.content like CONCAT('%',#{keywordsContent},'%')
+        </if>
+        <if test="auditStatus != null">
+            and r.audit_status = #{auditStatus}
+        </if>
+        <if test="startTime != null and startTime !='' ">
+            and r.create_time between #{startTime} and #{endTime}
+        </if>
+        <if test="title != '' and title != null ">
+            and n.title like CONCAT('%',#{title},'%')
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            r.uid like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and r.uid = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
+        </if>
+        ORDER BY r.id desc
+    </select>
+
+</mapper>

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.groupby.GroupBuyActivitySkuDao">
+
+    <select id="getListByGroupProductIdByList" resultType="com.zbkj.common.response.groupbuy.GroupBuyActivityProductListForSale">
+        SELECT
+            sku.id,
+            sku.product_id,
+            sku.group_activity_id,
+            sku.active_price,
+            sku.quota_show,
+            sku.quota,
+            sku.sku_id,
+            sku.group_status,
+            sku.activity_status,
+            ac.group_name,
+            ac.group_status AS activity_group_status,
+            ac.product_count,
+            ac.buy_count,
+            ac.show_group,
+            ac.ficti_status,
+            ac.total_order_begin,
+            ac.activity_status AS activity_activity_status,
+            product.image AS image_url,  -- 从 eb_product 表中获取商品图片
+            product.name AS product_name, -- 从 eb_product 表中获取商品名称
+            product.price AS price -- 从 eb_product 表中获取商品售价
+        FROM
+            eb_group_buy_activity_sku sku
+                JOIN
+            eb_group_buy_activity ac ON sku.group_activity_id = ac.id
+                JOIN
+            eb_product product ON sku.product_id = product.id
+            INNER JOIN
+            eb_product_attr_value pav ON sku.sku_id = pav.id
+        WHERE
+            ac.activity_status = 1 AND ac.group_status = 4 AND ac.is_del = 0 -- 开启的拼团活动 并且审核通过的
+          AND NOW() BETWEEN ac.start_time AND ac.end_time -- 符合活动时间的商品
+          AND product.is_del = 0
+          AND product.audit_status IN(0	,2) -- 审核成功 和 免审商品
+          <if test="showgroup != null and showgroup !='' and showgroup > -1">
+              AND ac.show_group = #{showgroup} -- 根据条件查询开启凑团 凑团 0不可见，1可见
+          </if>
+            AND pav.is_show = 1
+        GROUP BY
+            sku.product_id, sku.group_activity_id
+        ORDER BY
+            ac.create_time DESC, ac.id DESC , product.id DESC
+            LIMIT #{limit} OFFSET #{offset};
+    </select>
+
+    <select id="getFrontMinActivePriceByGroupActivityId" resultType="com.zbkj.common.model.groupbuy.GroupBuyActivitySku">
+        SELECT sku.*
+        FROM
+        eb_group_buy_activity_sku sku
+        inner JOIN
+        eb_product product ON sku.product_id = product.id
+        inner join
+        eb_product_attr_value pav on sku.sku_id = pav.id
+        WHERE
+        sku.group_activity_id = #{groupActivityId}
+        AND product.is_del = 0
+        AND (product.audit_status = 2 OR product.audit_status = 0) -- 审核成功 和 免审商品
+        AND pav.is_show = 1
+        ORDER BY
+        sku.active_price ASC , sku.id ASC
+        limit 1
+    </select>
+
+    <select id="findGroupBuySkuListByFront" resultType="com.zbkj.common.model.groupbuy.GroupBuyActivitySku">
+        SELECT
+        sku.*
+        FROM
+        eb_group_buy_activity_sku sku
+        INNER JOIN
+        eb_product p ON sku.product_id = p.id
+        INNER JOIN
+        eb_product_attr_value pav ON sku.sku_id = pav.id
+        INNER JOIN
+        eb_group_buy_activity ac ON sku.group_activity_id = ac.id
+        WHERE
+        sku.activity_status = 1
+        and sku.group_status = 4
+        AND p.is_del = 0
+        AND (p.audit_status = 2 OR p.audit_status = 0) -- 审核成功 和 免审商品
+        <if test="merId != null and merId &gt; 0">
+            AND p.mer_id = #{merId}
+        </if>
+        AND pav.is_show = 1
+        AND ac.activity_status = 1 AND ac.group_status = 4 AND ac.is_del = 0 -- 开启的拼团活动 并且审核通过的
+    </select>
+
+    <select id="findGroupMerchantProductListByFront" resultType="com.zbkj.common.response.groupbuy.GroupBuyActivityProductListForSale">
+        SELECT
+        sku.id,
+        sku.product_id,
+        sku.group_activity_id,
+        sku.active_price,
+        sku.quota_show,
+        sku.quota,
+        sku.sku_id,
+        sku.group_status,
+        sku.activity_status,
+        ac.group_name,
+        ac.group_status AS activity_group_status,
+        ac.product_count,
+        ac.buy_count,
+        ac.show_group,
+        ac.ficti_status,
+        ac.total_order_begin,
+        ac.activity_status AS activity_activity_status,
+        product.image AS image_url,  -- 从 eb_product 表中获取商品图片
+        product.name AS product_name, -- 从 eb_product 表中获取商品名称
+        product.price AS price -- 从 eb_product 表中获取商品售价
+        FROM
+        eb_group_buy_activity_sku sku
+        JOIN
+        eb_group_buy_activity ac ON sku.group_activity_id = ac.id
+        JOIN
+        eb_product product ON sku.product_id = product.id
+        INNER JOIN
+        eb_product_attr_value pav ON sku.sku_id = pav.id
+        WHERE
+        ac.activity_status = 1 AND ac.group_status = 4 AND ac.is_del = 0 -- 开启的拼团活动 并且审核通过的
+        AND NOW() BETWEEN ac.start_time AND ac.end_time -- 符合活动时间的商品
+        AND product.is_del = 0
+        AND product.audit_status IN (0,2) -- 审核成功 和 免审商品
+        AND pav.is_show = 1
+        <if test="merId != null and merId &gt; 0">
+            AND product.mer_id = #{merId}
+        </if>
+        GROUP BY
+        sku.product_id, sku.group_activity_id
+        ORDER BY
+        ac.create_time DESC, ac.id DESC , product.id DESC
+    </select>
+</mapper>

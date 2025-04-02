@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.RefundOrderDao">
+
+    <select id="getRefundOrderDetailByRefundOrderNo" resultType="com.zbkj.common.response.RefundOrderInfoResponse">
+        select ro.refund_order_no as refundOrderNo, ro.order_no as orderNo, ro.after_sales_type as afterSalesType, ro.refund_reason_wap as refundReasonWap,
+        ro.refund_reason_wap_img as refundReasonWapImg, ro.refund_reason_wap_explain as refundReasonWapExplain, ro.refund_status as refundStatus,
+        ro.refund_reason as refundReason, ro.refund_price as refundPrice, ro.refund_time as refundTime, ro.create_time as createTime,
+        roi.product_id as productId, roi.product_name as productName, roi.image as image, roi.sku as sku, roi.apply_refund_num as applyRefundNum,
+        roi.product_type as productType, roi.refund_use_integral as refundUseIntegral, roi.refund_gain_integral as refundGainIntegral,
+        ro.receiver, ro.receiver_phone as receiverPhone, ro.receiver_address_detail as receiverAddressDetail, ro.return_goods_type as returnGoodsType,
+        ro.express_name as expressName, ro.tracking_number as trackingNumber, ro.telephone, roi.price as productPrice,ro.mer_id as merId,
+        ro.is_user_revoke as isUserRevoke, ro.promoter_type as promoterType
+        from eb_refund_order ro
+        left join eb_refund_order_info roi on ro.refund_order_no = roi.refund_order_no
+        where
+        ro.refund_order_no = #{refundOrderNo}
+    </select>
+
+    <select id="findSearchList" resultType="com.zbkj.common.response.RefundOrderResponse" parameterType="Map">
+        SELECT ro.refund_order_no as refundOrderNo, roi.product_name as productName
+        , ro.refund_price as refundPrice, ro.refund_status as refundStatus
+        , roi.image as image, roi.sku as sku, roi.apply_refund_num as applyRefundNum
+        , ro.after_sales_type as afterSalesType, m.is_self as isSelf, ro.return_goods_type as returnGoodsType
+        , ro.receiver, ro.receiver_phone as receiverPhone, ro.receiver_address_detail as receiverAddressDetail
+        , ro.mer_id as merId
+        FROM eb_refund_order ro
+        left join eb_refund_order_info roi on ro.refund_order_no = roi.refund_order_no
+        right join eb_merchant m on ro.mer_id = m.id
+        where ro.uid = #{userId}
+        <if test="refundStatusStr != null and keywords != '' ">
+            and find_in_set(ro.refund_status, #{refundStatusStr})
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (ro.refund_order_no = #{keywords} or ro.order_no = #{keywords}
+                     or roi.product_name like CONCAT('%',#{keywords},'%'))
+        </if>
+        ORDER BY ro.id desc
+    </select>
+
+    <select id="findCanAutoRevokeOrderList" resultType="com.zbkj.common.model.order.RefundOrder" parameterType="Map">
+        SELECT ro.*
+        FROM eb_refund_order ro
+        left join eb_refund_order_status ros on ros.order_no = ro.refund_order_no and ros.change_type = 'audit'
+        where
+        ro.refund_status = 4
+        and ro.after_sales_type = 2
+        and ros.create_time &lt;= #{revokeTime}
+    </select>
+
+    <select id="getPlatformAdminPage" resultType="com.zbkj.common.response.PlatformRefundOrderPageResponse" parameterType="Map">
+        select ro.refund_order_no as refundOrderNo, ro.order_no as orderNo, ro.uid, ro.refund_status as refundStatus,
+               ro.refund_price as refundPrice, ro.platform_remark as platformRemark,ro.create_time as createTime,
+               ro.after_sales_type as afterSalesType, ro.return_goods_type as returnGoodsType,
+               ro.is_compulsory_refund as isCompulsoryRefund,
+               u.nickname as userNickName
+        from eb_refund_order ro
+        left join eb_user u on ro.uid = u.id
+        <where>
+            <if test="merId != null">
+                and ro.mer_id = #{merId}
+            </if>
+            <if test="orderNo != null and orderNo !=''">
+                and ro.order_no like CONCAT('%',#{orderNo},'%')
+            </if>
+            <if test="refundOrderNo != null and refundOrderNo !=''">
+                and ro.refund_order_no = #{refundOrderNo}
+            </if>
+            <if test="trackingNumber != null and trackingNumber !=''">
+                and ro.tracking_number = #{trackingNumber}
+            </if>
+            <if test="refundStatus != null">
+                and ro.refund_status = #{refundStatus}
+            </if>
+            <if test="startTime != null and startTime != ''">
+                and ro.create_time between #{startTime} and #{endTime}
+            </if>
+            <if test="keywords != '' and keywords != null ">
+                and (
+                ro.uid like CONCAT('%',#{keywords},'%') or
+                u.nickname like CONCAT('%',#{keywords},'%') or
+                u.phone like CONCAT('%',#{keywords},'%')
+                )
+            </if>
+            <if test="uid != null ">
+                and ro.uid = #{uid}
+            </if>
+            <if test="nickname != '' and nickname != null ">
+                and u.nickname like CONCAT('%',#{nickname},'%')
+            </if>
+            <if test="phone != '' and phone != null ">
+                and u.phone like CONCAT('%',#{phone},'%')
+            </if>
+        </where>
+        order by ro.id desc
+    </select>
+
+    <select id="getMerchantAdminPage" resultType="com.zbkj.common.response.MerchantRefundOrderPageResponse" parameterType="Map">
+        select ro.refund_order_no as refundOrderNo, ro.order_no as orderNo, ro.uid, ro.refund_status as refundStatus,
+        ro.refund_price as refundPrice, ro.mer_remark as merRemark,ro.create_time as createTime,
+        ro.after_sales_type as afterSalesType, ro.return_goods_type as returnGoodsType,
+        ro.is_compulsory_refund as isCompulsoryRefund, ro.total_num as totalNum,
+        u.nickname as userNickName
+        from eb_refund_order ro
+        left join eb_user u on ro.uid = u.id
+        where ro.mer_id = #{merId}
+        <if test="orderNo != null and orderNo !=''">
+            and ro.order_no like CONCAT('%',#{orderNo},'%')
+        </if>
+        <if test="refundOrderNo != null and refundOrderNo !=''">
+            and ro.refund_order_no = #{refundOrderNo}
+        </if>
+        <if test="trackingNumber != null and trackingNumber !=''">
+            and ro.tracking_number = #{trackingNumber}
+        </if>
+        <if test="refundStatus != null">
+            and ro.refund_status = #{refundStatus}
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and ro.create_time between #{startTime} and #{endTime}
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            ro.uid like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and ro.uid = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
+        </if>
+        order by ro.id desc
+    </select>
+
+    <select id="getMerchantAdminPageCount" resultType="java.lang.Integer" parameterType="Map">
+        select count(*)
+        from eb_refund_order ro
+        left join eb_user u on ro.uid = u.id
+        where 1=1
+        <if test="merId != null">
+            and ro.mer_id = #{merId}
+        </if>
+        <if test="orderNo != null and orderNo !=''">
+            and ro.order_no like CONCAT('%',#{orderNo},'%')
+        </if>
+        <if test="refundOrderNo != null and refundOrderNo !=''">
+            and ro.refund_order_no = #{refundOrderNo}
+        </if>
+        <if test="trackingNumber != null and trackingNumber !=''">
+            and ro.tracking_number = #{trackingNumber}
+        </if>
+        <if test="refundStatus != null">
+            and ro.refund_status = #{refundStatus}
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and ro.create_time between #{startTime} and #{endTime}
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            ro.uid like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and ro.uid = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
+        </if>
+        order by ro.id desc
+    </select>
+
+</mapper>

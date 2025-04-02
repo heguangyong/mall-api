@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.SeckillProductDao">
+
+    <select id="getSeckillProductPage" resultType="com.zbkj.common.response.SeckillProductPageResponse" parameterType="Map">
+        SELECT p.id,bp.image,bp.name,p.price,p.seckill_price as seckillPrice,p.quota_show as quotaShow,p.quota,
+        p.is_show as isShow,p.sort,p.spec_type as specType,p.audit_status as auditStatus,p.reason,p.activity_id as activityId,
+        p.product_id as productId,p.type,
+        m.name as merName,m.star_level as merStarLevel,sa.name as activityName,sa.status as activityStatus,
+        pc.name as categoryName
+        FROM eb_seckill_product AS p
+        left join eb_merchant AS m on p.mer_id = m.id
+        left join eb_seckill_activity AS sa on p.activity_id = sa.id
+        left join eb_product as bp on p.product_id = bp.id
+        left join eb_product_category AS pc on bp.category_id = pc.id
+        where p.is_del = 0
+        <if test="auditStatus != null">
+            and p.audit_status = #{auditStatus}
+        </if>
+        <if test="proName != null and proName !='' ">
+            and bp.name like CONCAT('%', #{proName, jdbcType=VARCHAR}, '%')
+        </if>
+        <if test="proStatus != null">
+            and p.is_show = #{proStatus}
+        </if>
+        <if test="activityIdStr != null and activityIdStr !='' ">
+            and find_in_set(p.activity_id, #{activityIdStr})
+        </if>
+        <if test="activityName != null and activityName !='' ">
+            and sa.name like CONCAT('%', #{activityName, jdbcType=VARCHAR}, '%')
+        </if>
+        <if test="merIds != null and merIds !='' ">
+            and find_in_set(p.mer_id, #{merIds})
+        </if>
+        <if test="merStars != null">
+            and m.star_level &gt;= #{merStars}
+        </if>
+        ORDER BY p.sort desc, (p.quota_show - p.quota) desc
+    </select>
+
+</mapper>

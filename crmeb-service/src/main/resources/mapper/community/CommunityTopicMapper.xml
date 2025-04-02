@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.community.CommunityTopicDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zbkj.common.model.community.CommunityTopic">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="is_hot" property="isHot" />
+        <result column="count_use" property="countUse" />
+        <result column="count_view" property="countView" />
+        <result column="sort" property="sort" />
+        <result column="is_del" property="isDel" />
+        <result column="create_type" property="createType" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, `name`, is_hot, count_use, count_view, sort, is_del, create_type, create_time, update_time
+    </sql>
+
+</mapper>

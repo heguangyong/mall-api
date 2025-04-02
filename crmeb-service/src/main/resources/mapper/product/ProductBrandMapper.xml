@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.ProductBrandDao">
+
+    <select id="getPageListByCategory" resultType="com.zbkj.common.model.product.ProductBrand" parameterType="Map">
+        SELECT pb.id,pb.name,pb.icon FROM eb_product_brand AS pb
+        right join eb_product_brand_category AS pbc
+        on pb.id = pbc.bid
+        where pb.is_show = 1 and pb.is_del = 0
+        and pbc.cid = #{cid}
+        <if test="brandName != null and brandName !='' ">
+            and pb.name like CONCAT('%', #{brandName, jdbcType=VARCHAR}, '%')
+        </if>
+        ORDER BY pb.sort desc
+    </select>
+
+</mapper>

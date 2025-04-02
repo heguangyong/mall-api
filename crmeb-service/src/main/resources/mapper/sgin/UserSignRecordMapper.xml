@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.UserSignRecordDao">
+
+    <select id="pageRecordList" resultType="com.zbkj.common.response.UserSignRecordResponse" parameterType="Map">
+        SELECT usr.id, usr.uid, usr.integral, usr.experience, usr.day, usr.award_integral as awardIntegral,
+               usr.award_experience as awardExperience, usr.date, usr.mark, usr.create_time as createTime,
+               u.nickname, u.avatar, u.phone
+        FROM eb_user_sign_record AS usr
+        left join eb_user as u on usr.uid = u.id
+        <where>
+            <if test="startTime != null and startTime != ''">
+                and usr.create_time between #{startTime} and #{endTime}
+            </if>
+            <if test="keywords != '' and keywords != null ">
+                and (
+                usr.uid like CONCAT('%',#{keywords},'%') or
+                u.nickname like CONCAT('%',#{keywords},'%') or
+                u.phone like CONCAT('%',#{keywords},'%')
+                )
+            </if>
+            <if test="uid != null ">
+                and usr.uid = #{uid}
+            </if>
+            <if test="nickname != '' and nickname != null ">
+                and u.nickname like CONCAT('%',#{nickname},'%')
+            </if>
+            <if test="phone != '' and phone != null ">
+                and u.phone like CONCAT('%',#{phone},'%')
+            </if>
+        </where>
+        ORDER BY usr.id desc
+    </select>
+
+</mapper>

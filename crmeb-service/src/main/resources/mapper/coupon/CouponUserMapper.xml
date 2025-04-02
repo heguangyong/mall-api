@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.CouponUserDao">
+
+    <select id="findListByPreOrder" resultType="com.zbkj.common.response.CouponUserOrderResponse" parameterType="Map">
+        SELECT cu.*
+        FROM eb_coupon_user AS cu
+        where
+        cu.`status` = 0
+        <if test="merId != null">
+            and cu.mer_id = #{merId}
+        </if>
+        and (cu.min_price = 0
+        or cu.min_price &lt;= #{maxPrice}
+        <if test="maxPrice != null">
+        </if>
+        )
+        <if test="date != null">
+            and cu.start_time &lt; #{date}
+            and cu.end_time &gt; #{date}
+        </if>
+        <if test="uid != null">
+            and cu.uid = #{uid}
+        </if>
+        and (cu.category = 1 or (cu.category = 2 and ${pidPrimaryKeySql}))
+        order by cu.id desc
+    </select>
+
+    <select id="findManyByUidAndMerIdAndMoneyAndProList" resultType="com.zbkj.common.model.coupon.CouponUser" parameterType="Map">
+        SELECT cu.*
+        FROM eb_coupon_user AS cu
+        left join eb_coupon AS c on cu.coupon_id  = c.id
+        where
+        cu.uid = #{userId}
+        and cu.mer_id = #{merId}
+        and cu.`status` = 0
+        and (cu.min_price = 0 or cu.min_price &lt;= #{money})
+        and cu.money &lt; #{money}
+        and cu.start_time &lt;= #{nowDate}
+        and cu.end_time &gt;= #{nowDate}
+        and (cu.category = 1 or (cu.category = 2 and
+        <foreach collection="proIdList" item="proId" open="(" close=")" index="index" separator="or">
+            find_in_set(#{proId}, c.linked_data)
+        </foreach>
+        ))
+        order by cu.money desc, cu.id desc
+    </select>
+
+    <select id="findManyPlatByUidAndMerIdAndMoneyAndProList" resultType="com.zbkj.common.model.coupon.CouponUser" parameterType="Map">
+        SELECT cu.*
+        FROM eb_coupon_user AS cu
+        left join eb_coupon AS c on cu.coupon_id  = c.id
+        where
+        cu.uid = #{userId}
+        and cu.mer_id = 0
+        and cu.`status` = 0
+        and (cu.min_price = 0 or cu.min_price &lt;= #{money})
+        and cu.money &lt; #{money}
+        and cu.start_time &lt;= #{nowDate}
+        and cu.end_time &gt;= #{nowDate}
+        and (
+        cu.category = 3 or
+        (cu.category = 2 and
+        <foreach collection="proIdList" separator="or" index="index" close=")" open="(" item="proId">
+            find_in_set(#{proId}, c.linked_data)
+        </foreach>
+        ) or
+        (cu.category = 4 and
+        <foreach collection="proCategoryIdList" separator="or" index="index" close=")" open="(" item="proCategoryId">
+            find_in_set(#{proCategoryId}, c.linked_data)
+        </foreach>
+        ) or
+        (cu.category = 5 and
+        <foreach collection="brandIdList" separator="or" index="index" close=")" open="(" item="brandId">
+            find_in_set(#{brandId}, c.linked_data)
+        </foreach>
+        ) or
+        (cu.category = 6 and
+        <foreach collection="merIdList" separator="or" index="index" close=")" open="(" item="merId">
+            find_in_set(#{merId}, c.linked_data)
+        </foreach>
+        )
+        )
+        order by cu.money desc, cu.id desc
+    </select>
+
+    <select id="findCouponReceiveRecordListByPlat" resultType="com.zbkj.common.model.coupon.CouponUser" parameterType="Map">
+        SELECT cu.*
+        FROM eb_coupon_user AS cu
+        left join eb_user as u on cu.uid = u.id
+        where cu.publisher = 1 and cu.mer_id = 0
+        <if test="name != '' and name != null ">
+            and cu.name = #{name}
+        </if>
+        <if test="status != null">
+            and cu.status = #{status}
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            cu.uid like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and cu.uid = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
+        </if>
+        order by cu.id desc
+    </select>
+</mapper>

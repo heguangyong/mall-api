@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.RechargeOrderDao">
+
+    <select id="getAdminPage" resultType="com.zbkj.common.model.order.RechargeOrder" parameterType="Map">
+        select ro.*,u.nickname,u.is_logoff
+        from eb_recharge_order ro
+        left join eb_user as u on ro.uid = u.id
+        where ro.paid = 1
+        <if test="orderNo != null and orderNo !=''">
+            and ro.order_no like CONCAT('%',#{orderNo},'%')
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and ro.create_time between #{startTime} and #{endTime}
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            ro.uid like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and ro.uid = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
+        </if>
+        order by ro.id desc
+    </select>
+
+</mapper>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.SeckillActivityTimeDao">
+
+    <select id="findFrontByDate" resultType="com.zbkj.common.model.seckill.SeckillActivityTime">
+        select sat.* from eb_seckill_activity_time sat
+        left join eb_seckill_activity sa on sa.id = sat.seckill_id
+        where
+        sat.start_date &lt;= #{dateInt}
+        and sat.end_date &gt;= #{dateInt}
+        and sa.is_open = 1
+        and sa.is_del = 0
+        group by sat.start_time,sat.end_time
+        order by sat.start_time asc, sat.end_time asc
+    </select>
+
+    <select id="findActivityByDateAndTime" resultType="java.lang.Integer">
+        select sat.seckill_id from eb_seckill_activity_time sat
+        left join eb_seckill_activity sa on sa.id = sat.seckill_id
+        where
+        sat.start_date &lt;= #{dateInt}
+        and sat.end_date &gt;= #{dateInt}
+        and sat.start_time = #{startTime}
+        and sat.end_time = #{endTime}
+        and sa.is_open = 1
+        and sa.is_del = 0
+        group by sat.seckill_id
+    </select>
+
+    <select id="isExistTimeInterval" resultType="java.lang.Boolean">
+        select count(sat.id) from eb_seckill_activity_time sat
+        left join eb_seckill_activity sa on sa.id = sat.seckill_id
+        where
+        sa.status &lt; 2
+        and sa.is_del = 0
+        and sat.time_interval_id = #{tid}
+    </select>
+
+</mapper>

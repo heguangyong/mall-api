@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.CouponDao">
+
+    <select id="getH5ListBySearch" resultType="com.zbkj.common.model.coupon.Coupon" parameterType="Map">
+        SELECT c.*
+        FROM eb_coupon AS c
+        where
+        c.is_del = 0 and c.status = 1 and c.receive_type = 1
+        and (c.last_total > 0 or c.is_limited = 0)
+        and (c.is_time_receive = 0 or (c.receive_start_time &lt;= #{date} and c.receive_end_time &gt;= #{date}))
+        and (c.is_fixed_time = 0 or c.use_end_time &gt;= #{date})
+        <if test="merId != null">
+            and c.mer_id = #{merId}
+        </if>
+        <if test="category != null">
+            and c.category = #{category}
+        </if>
+        <if test="productId != null">
+            and c.category = 2 and (#{productId} in (select pid from eb_coupon_product where cid = c.id))
+        </if>
+        order by c.id desc
+    </select>
+
+    <select id="findManyByMerIdAndMoney" resultType="com.zbkj.common.model.coupon.Coupon" parameterType="Map">
+        SELECT *
+        FROM eb_coupon
+        where
+        status = 1 and receive_type = 1
+        and mer_id = #{merId}
+        and (category = 1 or (category = 2 and
+        <foreach collection="proIdList" separator="or" index="index" close=")" open="(" item="proId">
+            find_in_set(#{proId}, linked_data)
+        </foreach>
+        ))
+        and (min_price = 0 or min_price &lt;= #{minPrice})
+        and money &lt; #{minPrice}
+        and (last_total > 0 or is_limited = 0)
+        and (is_time_receive = 0 or (receive_start_time &lt;= #{nowDate} and receive_end_time &gt;= #{nowDate}))
+        and (is_fixed_time = 0 or (use_end_time &gt;= #{nowDate} and use_start_time &lt;= #{nowDate}))
+        and is_del = 0
+        order by money desc, id desc
+    </select>
+
+    <select id="findManyPlatByMerIdAndMoney" resultType="com.zbkj.common.model.coupon.Coupon" parameterType="Map">
+        SELECT *
+        FROM eb_coupon
+        where
+        status = 1 and receive_type = 1
+        and mer_id = 0
+        and (
+        category = 3 or
+        (category = 2 and
+        <foreach collection="proIdList" separator="or" index="index" close=")" open="(" item="proId">
+            find_in_set(#{proId}, linked_data)
+        </foreach>
+        ) or
+        (category = 4 and
+        <foreach collection="proCategoryIdList" separator="or" index="index" close=")" open="(" item="proCategoryId">
+            find_in_set(#{proCategoryId}, linked_data)
+        </foreach>
+        ) or
+        (category = 5 and
+        <foreach collection="brandIdList" separator="or" index="index" close=")" open="(" item="brandId">
+            find_in_set(#{brandId}, linked_data)
+        </foreach>
+        ) or
+        (category = 6 and
+        <foreach collection="merIdList" separator="or" index="index" close=")" open="(" item="merId">
+            find_in_set(#{merId}, linked_data)
+        </foreach>
+        )
+        )
+        and (min_price = 0 or min_price &lt;= #{minPrice})
+        and (last_total > 0 or is_limited = 0)
+        and money &lt; #{minPrice}
+        and (is_time_receive = 0 or (receive_start_time &lt;= #{nowDate} and receive_end_time &gt;= #{nowDate}))
+        and (is_fixed_time = 0 or (use_end_time &gt;= #{nowDate} and use_start_time &lt;= #{nowDate}))
+        and is_del = 0
+        order by money desc, id desc
+    </select>
+
+    <select id="getCouponListForDiyHomePage" resultType="com.zbkj.common.model.coupon.Coupon" parameterType="Integer">
+        SELECT c.*
+        FROM eb_coupon AS c
+        where
+        c.is_del = 0 and c.status = 1 and receive_type = 1 and publisher = 1
+        and (last_total > 0 or is_limited = 0)
+        and (is_time_receive = 0 or (receive_start_time &lt;= NOW() and receive_end_time &gt;= NOW()))
+        and (is_fixed_time = 0 or (use_end_time &gt;= NOW() and use_start_time &lt;= NOW()))
+        order by c.sort,c.id desc limit #{limit}
+    </select>
+
+</mapper>

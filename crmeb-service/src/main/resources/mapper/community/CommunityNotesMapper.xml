@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.community.CommunityNotesDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zbkj.common.model.community.CommunityNotes">
+        <id column="id" property="id" />
+        <result column="title" property="title" />
+        <result column="type" property="type" />
+        <result column="cover" property="cover" />
+        <result column="image" property="image" />
+        <result column="video" property="video" />
+        <result column="content" property="content" />
+        <result column="category_id" property="categoryId" />
+        <result column="topic_ids" property="topicIds" />
+        <result column="uid" property="uid" />
+        <result column="star" property="star" />
+        <result column="audit_status" property="auditStatus" />
+        <result column="refusal" property="refusal" />
+        <result column="like_num" property="likeNum" />
+        <result column="reply_num" property="replyNum" />
+        <result column="share_num" property="shareNum" />
+        <result column="sort" property="sort" />
+        <result column="reply_status" property="replyStatus" />
+        <result column="is_del" property="isDel" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, title, `type`, cover, image, video, content, category_id, topic_ids, uid, star, audit_status, refusal, like_num, reply_num, shareNum, sort, reply_status, is_del, create_time, update_time
+    </sql>
+
+    <select id="findPageList" resultType="com.zbkj.common.dto.CommunityNotePageDateDto" parameterType="Map">
+        SELECT n.id,n.title,n.`type`,n.cover,n.category_id as categoryId,n.topic_ids as topicIds,n.star,
+        n.audit_status as auditStatus,n.refusal,n.reply_status as replyStatus,n.create_time as createTime,
+        n.like_num as likeNum,n.reply_num as replyNum,
+        u.id as authorId, u.nickname as authorName
+        from eb_community_notes as n
+        left join eb_user as u on n.uid = u.id
+        where n.is_del = 0
+        <if test="title != '' and title != null ">
+            and n.title like CONCAT('%',#{title},'%')
+        </if>
+        <if test="type != null">
+            and n.`type` = #{type}
+        </if>
+        <if test="categoryId != null">
+            and n.category_id = #{categoryId}
+        </if>
+        <if test="auditStatus != null">
+            and n.audit_status = #{auditStatus}
+        </if>
+        <if test="topicId != null">
+            and find_in_set(#{topicId}, n.topic_ids)
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            n.uid like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and n.uid = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
+        </if>
+        ORDER BY n.star desc, n.id desc
+    </select>
+
+</mapper>

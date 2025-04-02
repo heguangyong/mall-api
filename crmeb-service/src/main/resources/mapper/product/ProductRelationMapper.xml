@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.ProductRelationDao">
+
+    <select id="getUserList" resultType="com.zbkj.common.response.UserProductRelationResponse" parameterType="java.lang.Integer">
+        SELECT r.id,r.product_id,r.create_time,p.name,p.image,p.price,p.is_show,p.stock
+        FROM eb_product_relation r
+        INNER JOIN eb_product p ON r.product_id = p.id And p.is_show = 1
+        where r.`type` = 'collect'
+        <if test="uid != '' and type != null">
+            and r.uid = #{uid}
+        </if>
+        ORDER BY r.id DESC
+    </select>
+
+</mapper>
