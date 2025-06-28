@@ -1,4 +1,3 @@
-#todo 环境略旧，需更新
 # 环境
 1. Java Jdk1.8
 2. Redis 5+
