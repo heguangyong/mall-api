@@ -101,30 +101,17 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
             return null;
         }
         MyRecord record = new MyRecord();
-        if (!crmebConfig.getAsyncConfig()) {
-            LambdaQueryWrapper<SystemConfig> lqw = Wrappers.lambdaQuery();
-            lqw.select(SystemConfig::getName, SystemConfig::getValue);
-            lqw.in(SystemConfig::getName, keyList);
-            lqw.eq(SystemConfig::getStatus, false);
-            lqw.groupBy(SystemConfig::getName);
-            lqw.orderByDesc(SystemConfig::getId);
-            List<SystemConfig> systemConfigList = dao.selectList(lqw);
-            keyList.forEach(k -> {
-                SystemConfig systemConfig = systemConfigList.stream().filter(config -> config.getName().equals(k)).findFirst().orElse(null);
-                if (ObjectUtil.isNotNull(systemConfig)) {
-                    record.set(systemConfig.getName(), systemConfig.getValue());
-                } else {
-                    record.set(k, "");
-                }
-            });
-            return record;
-        }
         keyList.forEach(k -> {
-            String value = get(k);
-            record.set(k, value);
+            SystemConfig systemConfig = getByName(k);
+            if (ObjectUtil.isNotNull(systemConfig)) {
+                record.set(k, systemConfig.getValue());
+            } else {
+                record.set(k, "");
+            }
         });
         return record;
     }
+
 
     /**
      * 根据menu name 获取 value

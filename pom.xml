@@ -9,8 +9,6 @@
         <module>crmeb-admin</module>
         <module>crmeb-front</module>
         <module>crmeb-generate</module>
-        <module>crmeb-hotel</module>
-        <module>crmeb-catering</module>
     </modules>
 
     <groupId>com.zbkj</groupId>
@@ -29,7 +27,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <fastjson.version>1.2.56</fastjson.version>
         <druid.version>1.1.20</druid.version>
-        <mysql.version>5.1.24</mysql.version>
+        <mysql.version>8.0.33</mysql.version>
         <mysql.plus.version>3.3.1</mysql.plus.version>
         <weixin-java.version>3.9.0</weixin-java.version>
     </properties>
@@ -61,7 +59,7 @@
 
         <!--访问mysql-->
         <!--JDBC-->
-        <!-- MySql 5.5 Connector -->
+        <!-- MySql 8.0.33 Connector -->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>

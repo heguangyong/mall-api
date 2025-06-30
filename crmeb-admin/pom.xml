@@ -45,19 +45,6 @@
             <artifactId>wx-java-miniapp-spring-boot-starter</artifactId>
             <version>4.4.0</version>
         </dependency>
-
-        <!--    酒店模块    -->
-        <dependency>
-            <groupId>com.laios</groupId>
-            <artifactId>crmeb-hotel</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>
-        <!--   餐饮模块     -->
-        <dependency>
-            <groupId>com.laios</groupId>
-            <artifactId>crmeb-catering</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 
     <build>

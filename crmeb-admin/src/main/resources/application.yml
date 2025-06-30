@@ -4,7 +4,7 @@ crmeb:
   domain: #配合swagger使用 # 待部署域名
   wechat-api-url:  #请求微信接口中专服务器
   asyncConfig: false #是否同步config表数据到redis
-  imagePath: D:/workspace/company/e-co/crembe/JAVA-MER-1.8_To_1.8.1_20250314/JAVA-MER-1.8_To_1.8.1_20250314/mer_java/image/ # 服务器图片路径配置 斜杠结尾
+  imagePath: /Users/demo/Workspace/mall-api/image/ # 服务器图片路径配置 斜杠结尾
   retailStoreBrokerageRatio: 30 #佣金返佣比例和上限
   activityStyleCachedTime: 10 #活动边框缓存周期 秒为单位，生产环境适当5-10分钟即可
   selectProductLimit: 100 # 商品选择 指定商品上线
@@ -54,7 +54,7 @@ spring:
   #  数据库配置
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
-    driver-class-name: com.mysql.jdbc.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://crmeb-mysql:3306/java_mer_demo?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
     username: root
     password: 123456
@@ -120,6 +120,7 @@ mybatis-plus:
   typeAliasesPackage: com.zbkj.**.model
   # 配置slq打印日志
   configuration:
+    map-underscore-to-camel-case: true  # ✅ 补充这行，解决SQL字段映射错误
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:

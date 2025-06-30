@@ -55,7 +55,7 @@ spring:
   #  数据库配置
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
-    driver-class-name: com.mysql.jdbc.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://crmeb-mysql:3306/java_mer_demo?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
     username: root
     password: 123456
